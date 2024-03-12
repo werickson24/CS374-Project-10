@@ -47,7 +47,7 @@ int virt_to_phys(int proc_num, int virtual_address){
 
     //address virtual page half to physical page
     int virt_page_num = virtual_address >> PAGE_SHIFT;
-    int phys_page = mem[virt_page_num];
+    int phys_page = mem[get_address(proc_table, virt_page_num)];
 
     int phys_offset = virtual_address & 255;//this should probably be PAGE_SIZE, but its 256? PAGE_SIZE - 1?
 
@@ -131,12 +131,24 @@ void kill_process(int proc_num){
     }
 }
 
-//Deallocate and free page
+void store_value(int proc_num, int vaddr, int val){
+    int addr = virt_to_phys(proc_num, vaddr);
 
-//Kill process
+    mem[addr] = val;
 
-//virtual address to physical
+    printf("Store proc %d: %d => %d, value=%d\n", proc_num, vaddr, addr, val);
+}
 
+int get_value(int proc_num, int vaddr){
+    int addr = virt_to_phys(proc_num, vaddr);
+
+    int val = mem[addr];
+
+    printf("Load proc %d: %d => %d, value=%d\n",
+    proc_num, vaddr, addr, val);
+
+    return val;
+}
 
 
 //
@@ -221,12 +233,14 @@ int main(int argc, char *argv[])
             int proc_num = atoi(argv[++i]);
             int addr_num = atoi(argv[++i]);
             int value_num = atoi(argv[++i]);
-            printf("sb n:%d a:%d b:%d", proc_num, addr_num, value_num);
+            store_value(proc_num, addr_num, value_num);
+            //printf("sb n:%d a:%d b:%d", proc_num, addr_num, value_num);
         }
         else if (strcmp(argv[i], "lb") == 0) {
             int proc_num = atoi(argv[++i]);
             int addr_num = atoi(argv[++i]);
-            printf("lb n:%d a:%d", proc_num, addr_num);
+            //printf("lb n:%d a:%d", proc_num, addr_num);
+            get_value(proc_num, addr_num);
         }
     }
     fflush(stdout);
