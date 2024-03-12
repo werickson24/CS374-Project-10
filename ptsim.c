@@ -41,6 +41,20 @@ unsigned char get_page_table(int proc_num)
     return mem[ptp_addr];
 }
 
+//virtual to physical address
+// i have no idea what im doing
+int virt_to_phys(int virtual_address){
+    int virtual_page = virtual_address >> PAGE_SHIFT;
+    int offset = virtual_address & 255;//this should probably be PAGE_SIZE
+
+    int page_table = get_page_table(virtual_page);
+
+    int page = get_address(page_table, offset);
+
+    int phys_addr = (page << PAGE_SHIFT) | offset;
+    return phys_addr;
+}
+
 //
 // Allocate pages for a new process
 //
@@ -48,7 +62,6 @@ unsigned char get_page_table(int proc_num)
 //
 void new_process(int proc_num, int page_count)
 {
-    // TODO
     int page_table_created = 0;
     //int page_table_address = 0;
     int app_page_table;
@@ -93,6 +106,37 @@ void new_process(int proc_num, int page_count)
         }
     }
 }
+
+void kill_process(int proc_num){
+    //no deleting the OS page
+    if(proc_num == 0){
+        return;
+    }
+
+    int process_table = get_page_table(proc_num);
+
+    //remove page table page
+    int table_page = mem[get_address(0, proc_num + PTP_OFFSET)];
+    mem[table_page] = 0;
+    //actual table in memory is retained cause i don't feel like re accessing this wild memory address, keep track of this
+
+    //remove pages
+    for (int i = 0; i < PAGE_COUNT; i++) {
+        int addr = get_address(process_table, i);
+        int page = mem[addr];
+        if (page != 0) {
+            //printf("%02x -> %02x\n", i, page);
+            mem[page] = 0;
+        }
+    }
+}
+
+//Deallocate and free page
+
+//Kill process
+
+//virtual address to physical
+
 
 
 //
@@ -167,6 +211,22 @@ int main(int argc, char *argv[])
             int page_count = atoi(argv[++i]);
             //printf("np n:%d m:%d", proc_num, page_count);
             new_process(proc_num, page_count);
+        }
+        else if (strcmp(argv[i], "kp") == 0) {
+            int proc_num = atoi(argv[++i]);
+            //printf("kp n:%d", proc_num);
+            kill_process(proc_num);
+        }
+        else if (strcmp(argv[i], "sb") == 0) {
+            int proc_num = atoi(argv[++i]);
+            int addr_num = atoi(argv[++i]);
+            int value_num = atoi(argv[++i]);
+            printf("sb n:%d a:%d b:%d", proc_num, addr_num, value_num);
+        }
+        else if (strcmp(argv[i], "lb") == 0) {
+            int proc_num = atoi(argv[++i]);
+            int addr_num = atoi(argv[++i]);
+            printf("lb n:%d a:%d", proc_num, addr_num);
         }
     }
     fflush(stdout);
