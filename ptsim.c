@@ -42,16 +42,16 @@ unsigned char get_page_table(int proc_num)
 }
 
 //virtual to physical address
-// i have no idea what im doing
-int virt_to_phys(int virtual_address){
-    int virtual_page = virtual_address >> PAGE_SHIFT;
-    int offset = virtual_address & 255;//this should probably be PAGE_SIZE
+int virt_to_phys(int proc_num, int virtual_address){
+    int proc_table = get_page_table(proc_num);
 
-    int page_table = get_page_table(virtual_page);
+    //address virtual page half to physical page
+    int virt_page_num = virtual_address >> PAGE_SHIFT;
+    int phys_page = mem[virt_page_num];
 
-    int page = get_address(page_table, offset);
+    int phys_offset = virtual_address & 255;//this should probably be PAGE_SIZE, but its 256? PAGE_SIZE - 1?
 
-    int phys_addr = (page << PAGE_SHIFT) | offset;
+    int phys_addr = (phys_page << PAGE_SHIFT) | phys_offset;
     return phys_addr;
 }
 
